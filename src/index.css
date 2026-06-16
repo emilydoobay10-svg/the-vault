@@ -13,19 +13,23 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:18px 3
 .nav-links a{font-size:13px;color:var(--gray);text-decoration:none;font-weight:600;cursor:pointer;}
 .nav-links a:hover{color:var(--white);}
 .nav-links a.active{color:var(--pink);}
-.nav-btn{background:var(--purple);color:#fff;font-size:12px;font-weight:700;padding:9px 20px;border:none;cursor:pointer;}
+.nav-btn{background:var(--purple);color:#fff;font-size:12px;font-weight:700;padding:9px 20px;border:none;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;}
+.nav-links a.nav-btn:hover{color:#fff;}
 
 /* SHARED */
 .eyebrow{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.25em;color:var(--pink);text-transform:uppercase;margin-bottom:12px;}
 .eyebrow-p{color:var(--purple);}
 .section{padding:56px 32px;}
 .section-alt{padding:56px 32px;background:var(--card);}
-.section-title{font-family:'Bebas Neue',sans-serif;font-size:44px;color:var(--white);line-height:1.05;margin-bottom:16px;letter-spacing:0.02em;}
+.section-title{font-family:'Bebas Neue',sans-serif;font-size:44px;color:var(--purple);line-height:1.05;margin-bottom:16px;letter-spacing:0.02em;}
 .section-body{font-size:15px;color:var(--gray);line-height:1.85;max-width:500px;font-weight:500;}
 .divider{height:1px;background:var(--border);}
-.btn-pink{background:var(--pink);color:#fff;font-size:13px;font-weight:700;padding:13px 28px;border:none;cursor:pointer;}
-.btn-outline{background:transparent;color:var(--white);font-size:13px;font-weight:600;padding:12px 28px;border:1px solid var(--border);cursor:pointer;}
+.btn-pink{background:var(--pink);color:#fff;font-size:13px;font-weight:700;padding:13px 28px;border:none;cursor:pointer;text-decoration:none;display:inline-block;}
+.btn-outline{background:transparent;color:var(--white);font-size:13px;font-weight:600;padding:12px 28px;border:1px solid var(--border);cursor:pointer;text-decoration:none;display:inline-block;}
 footer{background:var(--card);border-top:1px solid var(--border);padding:22px 32px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;}
+.footer-links{display:flex;flex-wrap:wrap;gap:16px;}
+.footer-links a{font-size:13px;color:var(--gray);text-decoration:none;font-weight:600;}
+.footer-links a:hover{color:var(--white);}
 .footer-logo{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--pink);letter-spacing:0.1em;}
 .footer-note{font-size:13px;color:var(--gray);font-weight:500;}
 
@@ -118,7 +122,7 @@ input[type=range]{width:100%;accent-color:var(--pink);}
 .output-num{font-family:'Space Mono',monospace;font-size:40px;color:var(--pink);font-weight:700;}
 
 .apply-section{padding:56px 32px;text-align:center;}
-.apply-title{font-family:'Bebas Neue',sans-serif;font-size:52px;color:var(--pink);letter-spacing:0.02em;margin-bottom:10px;}
+.apply-title{font-family:'Bebas Neue',sans-serif;font-size:52px;color:var(--purple);letter-spacing:0.02em;margin-bottom:10px;}
 .apply-sub{font-size:15px;color:var(--gray);margin-bottom:32px;font-weight:500;}
 .apply-form{background:var(--card);border:1px solid var(--border);padding:28px;text-align:left;max-width:440px;margin:0 auto;}
 .field-label{font-size:12px;font-weight:700;color:var(--gray);display:block;margin-bottom:7px;letter-spacing:0.04em;}
@@ -198,3 +202,15 @@ input[type=range]{width:100%;accent-color:var(--pink);}
 .disclaimer{margin:0 32px 48px;padding:24px;border:1px solid var(--border);background:var(--card);}
 .disclaimer-text{font-size:13px;color:var(--gray);line-height:1.8;font-weight:500;}
 .disclaimer-text a{color:var(--purple);text-decoration:none;font-weight:700;}
+
+/* ── FAQ & CONTACT ── */
+.faq-list{padding:0 32px 48px;}
+.faq-item{padding:32px 0;border-bottom:1px solid var(--border);}
+.faq-item:last-child{border-bottom:none;}
+.faq-question{font-size:18px;font-weight:800;color:var(--white);margin-bottom:12px;line-height:1.3;}
+.faq-answer{font-size:15px;color:var(--gray);line-height:1.85;font-weight:500;max-width:720px;}
+.contact-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;padding-bottom:56px;}
+.contact-card{background:var(--card);border:1px solid var(--border);padding:28px;display:flex;flex-direction:column;gap:16px;}
+.contact-card-title{font-size:17px;font-weight:800;color:var(--white);}
+.contact-card-text{font-size:14px;color:var(--gray);line-height:1.8;font-weight:500;flex:1;}
+.contact-card-meta{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.15em;color:var(--purple);text-transform:uppercase;}

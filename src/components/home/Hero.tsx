@@ -1,10 +1,8 @@
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { MachineMini } from '../ui/MachineMini';
-import { useScrollToSection } from '../../hooks/useScrollToSection';
 
 export function Hero() {
   const navigate = useNavigate();
-  const scrollToHiw = useScrollToSection('hiw');
 
   return (
     <section className="hero">
@@ -21,9 +19,9 @@ export function Hero() {
           <button type="button" className="btn-pink" onClick={() => navigate('/hardware')}>
             Check Out the Hardware
           </button>
-          <button type="button" className="btn-outline" onClick={scrollToHiw}>
+          <Link to="/how-it-works" className="btn-outline">
             How It Works
-          </button>
+          </Link>
         </div>
       </div>
       <div className="hero-right">

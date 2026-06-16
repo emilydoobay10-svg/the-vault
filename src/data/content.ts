@@ -203,3 +203,46 @@ export const COMPLIANCE_REGIMES = [
 ];
 
 export type HardwareUnitId = keyof typeof HARDWARE_UNITS;
+
+export const FAQ_ITEMS = [
+  {
+    question: 'What is The Vault?',
+    answer:
+      'The Vault is a premium age-verified vape vending service for licensed 19+ venues in British Columbia. We place smart vending terminals in nightclubs, bars, lounges, hotels, and hospitality spaces at zero cost to the venue, with full regulatory compliance handled by our team.',
+  },
+  {
+    question: 'How much does it cost my venue?',
+    answer:
+      'Nothing upfront. The Vault purchases, delivers, installs, and maintains every unit. Your venue provides floor space in a 19+ licensed environment and receives a monthly revenue share from sales.',
+  },
+  {
+    question: 'Who handles compliance and regulatory filings?',
+    answer:
+      'The Vault Vending Inc. holds all regulatory obligations — including TVPA compliance, BCER Notice of Intent filings, city business licences, and sales reporting. Your venue holds zero regulatory liability.',
+  },
+  {
+    question: 'How does age verification work?',
+    answer:
+      'Every sale requires a PDF417 barcode scan of a valid Canadian government ID. The machine verifies date of birth and hard-locks on any failed read. There is no manual override.',
+  },
+  {
+    question: 'What payment methods are supported?',
+    answer:
+      'All units include Nayax cashless payment terminals supporting Interac, Visa, Mastercard, Apple Pay, Google Pay, and contactless tap. Every transaction is encrypted and logged automatically.',
+  },
+  {
+    question: 'Which venue types qualify?',
+    answer:
+      'Licensed 19+ venues in British Columbia including nightclubs, bars, lounges, live music venues, casinos, hotels, and private event spaces where minors cannot access or view the machine.',
+  },
+  {
+    question: 'Do my staff need to restock or maintain the machine?',
+    answer:
+      'No. The Vault handles restocking, signage, maintenance, and tax remittance end to end. Live telemetry alerts our team before inventory runs low.',
+  },
+  {
+    question: 'Where is The Vault launching?',
+    answer:
+      'The Vault is launching in Metro Vancouver (YVR) in 2026, with expansion across British Columbia for qualified hospitality partners.',
+  },
+] as const;

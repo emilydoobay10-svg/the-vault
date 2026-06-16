@@ -1,7 +1,11 @@
 import { useState, type FormEvent } from 'react';
 import { VENUE_TYPES } from '../../data/content';
 
-export function ApplyForm() {
+type ApplyFormProps = {
+  showHeader?: boolean;
+};
+
+export function ApplyForm({ showHeader = true }: ApplyFormProps) {
   const [submitted, setSubmitted] = useState(false);
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -11,8 +15,12 @@ export function ApplyForm() {
 
   return (
     <section className="apply-section" id="apply">
-      <div className="apply-title">DOES YOUR VENUE QUALIFY?</div>
-      <p className="apply-sub">19+ licensed venues in BC only. We respond within one business day.</p>
+      {showHeader && (
+        <>
+          <div className="apply-title">DOES YOUR VENUE QUALIFY?</div>
+          <p className="apply-sub">19+ licensed venues in BC only. We respond within one business day.</p>
+        </>
+      )}
       <form className="apply-form" onSubmit={handleSubmit}>
         <label className="field-label" htmlFor="venue-name">
           Venue Name
