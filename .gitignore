@@ -20,3 +20,6 @@ dist-ssr
 # Env
 .env
 .env.*
+
+# Reference artifact (pre-refactor monolith; not used in build)
+index.original.html
