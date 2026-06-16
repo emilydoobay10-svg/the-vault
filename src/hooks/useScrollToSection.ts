@@ -5,17 +5,12 @@ export function useScrollToApply() {
   const navigate = useNavigate();
 
   return useCallback(() => {
-    const scrollToApply = () => {
+    if (window.location.pathname === '/') {
       document.getElementById('apply')?.scrollIntoView({ behavior: 'smooth' });
-    };
-
-    if (window.location.pathname !== '/') {
-      navigate('/');
-      window.setTimeout(scrollToApply, 100);
       return;
     }
 
-    scrollToApply();
+    navigate('/apply');
   }, [navigate]);
 }
 
@@ -29,16 +24,11 @@ export function useScrollToSectionFromNav(sectionId: string) {
   const navigate = useNavigate();
 
   return useCallback(() => {
-    const scroll = () => {
+    if (window.location.pathname === '/') {
       document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' });
-    };
-
-    if (window.location.pathname !== '/') {
-      navigate('/');
-      window.setTimeout(scroll, 100);
       return;
     }
 
-    scroll();
+    navigate(sectionId === 'hiw' ? '/how-it-works' : '/');
   }, [navigate, sectionId]);
 }

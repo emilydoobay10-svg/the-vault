@@ -1,13 +1,12 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { HARDWARE_UNITS, type HardwareUnitId } from '../../data/content';
-import { useScrollToApply } from '../../hooks/useScrollToSection';
 import { Eyebrow } from '../ui/Eyebrow';
 import { Footer } from '../layout/Footer';
 import { UnitPanel } from './UnitPanel';
 
 export function HardwarePageContent() {
   const [activeUnit, setActiveUnit] = useState<HardwareUnitId>('wall');
-  const scrollToApply = useScrollToApply();
 
   return (
     <>
@@ -44,9 +43,9 @@ export function HardwarePageContent() {
       <section className="hw-cta">
         <div className="cta-title">READY TO DEPLOY?</div>
         <p className="cta-sub">Zero cost to your venue. Full compliance handled. Revenue share from day one.</p>
-        <button type="button" className="btn-pink" onClick={scrollToApply}>
+        <Link to="/apply" className="btn-pink">
           Apply Now
-        </button>
+        </Link>
       </section>
 
       <Footer />
