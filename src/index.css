@@ -45,8 +45,8 @@ footer{background:var(--card);border-top:1px solid var(--border);padding:22px 32
 .hero{padding:52px 32px;display:flex;align-items:center;gap:40px;}
 .hero-left{flex:1;min-width:0;}
 .hero-tag{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.2em;color:var(--pink);text-transform:uppercase;margin-bottom:14px;}
-.hero h1{font-family:'Bebas Neue',sans-serif;font-size:52px;line-height:1;color:var(--purple);margin-bottom:14px;letter-spacing:0.02em;}
-.hero h1 span{color:var(--purple);}
+.hero h1{font-family:'Bebas Neue',sans-serif;font-size:52px;line-height:1;color:var(--white);margin-bottom:14px;letter-spacing:0.02em;}
+.hero h1 span{color:var(--pink);}
 .hero h1 em{color:var(--purple);font-style:normal;}
 .hero-sub{font-size:14px;color:var(--gray);line-height:1.75;margin-bottom:26px;font-weight:500;}
 .hero-btns{display:flex;gap:12px;flex-wrap:wrap;}
