@@ -1,0 +1,328 @@
+
+/* ── Full-width layout, bold type, taller hero ── */
+:root {
+  --page-pad: clamp(20px, 4vw, 48px);
+  --section-pad-y: clamp(64px, 8vw, 96px);
+}
+
+nav,
+.badge-strip,
+.section,
+.section-alt,
+.hero,
+.hw-header,
+.toggle-bar,
+.unit-panel,
+.hw-cta,
+.page-header,
+.regime-list,
+.indemnity-block,
+.disclaimer,
+footer,
+.apply-section {
+  width: 100%;
+  padding-left: var(--page-pad);
+  padding-right: var(--page-pad);
+}
+
+.section,
+.section-alt,
+.apply-section,
+.hw-header,
+.hw-cta,
+.page-header {
+  padding-top: var(--section-pad-y);
+  padding-bottom: var(--section-pad-y);
+}
+
+.hero {
+  min-height: clamp(720px, 92vh, 980px);
+  padding-top: clamp(72px, 10vh, 120px);
+  padding-bottom: clamp(72px, 10vh, 120px);
+  align-items: center;
+  overflow: visible;
+}
+
+.hero h1 {
+  font-size: clamp(56px, 9vw, 104px);
+  margin-bottom: 28px;
+}
+
+.hero-left,
+.hero-right {
+  flex: 1 1 50%;
+  max-width: 50%;
+  min-width: 0;
+}
+
+.hero-left {
+  flex: 1 1 40%;
+  max-width: 42%;
+}
+
+.hero-right {
+  flex: 1 1 60%;
+  max-width: 58%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+}
+
+.hero-machine-wrap {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+}
+
+.hero-tag,
+.eyebrow,
+.eyebrow-p,
+.callout-label,
+.indemnity-label,
+.unit-label,
+.regime-level,
+.tech-item-tag {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(20px, 2.5vw, 28px);
+  letter-spacing: 0.08em;
+  font-weight: 400;
+  line-height: 1.1;
+}
+
+.hero-tag {
+  margin-bottom: 18px;
+}
+
+.hero-sub,
+.section-body,
+.hw-sub,
+.page-sub,
+.feat-desc,
+.step-body p,
+.comp-item p,
+.tech-item-desc,
+.tech-sub,
+.unit-desc,
+.regime-text,
+.indemnity-text,
+.cta-sub,
+.apply-sub,
+.disclaimer-text {
+  max-width: none;
+  font-size: clamp(17px, 2.2vw, 22px);
+  font-weight: 600;
+  line-height: 1.65;
+  color: #bbb;
+}
+
+.nav-logo {
+  font-size: clamp(22px, 3vw, 32px);
+  line-height: 1;
+}
+
+.nav-links a {
+  font-size: clamp(14px, 1.6vw, 17px);
+  font-weight: 700;
+}
+
+.nav-btn {
+  font-size: clamp(13px, 1.5vw, 15px);
+  padding: 11px 22px;
+}
+
+.badge {
+  font-size: clamp(12px, 1.5vw, 15px);
+  padding: 8px 16px;
+}
+
+.badge-strip {
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+
+.section-title,
+.apply-title,
+.cta-title,
+.tech-title {
+  font-size: clamp(44px, 7vw, 72px);
+}
+
+.hw-title,
+.page-title {
+  font-size: clamp(52px, 8vw, 88px);
+}
+
+.step-body h4,
+.comp-item h5,
+.tech-item-title {
+  font-size: clamp(18px, 2.4vw, 24px);
+  font-weight: 800;
+}
+
+.callout-text {
+  font-size: clamp(22px, 3vw, 32px);
+}
+
+.btn-pink,
+.btn-outline {
+  font-size: clamp(14px, 1.6vw, 17px);
+  font-weight: 800;
+  padding: 15px 30px;
+}
+
+.ticker {
+  padding: 14px 0;
+}
+
+.ticker-inner span {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(16px, 2vw, 22px);
+  letter-spacing: 0.1em;
+}
+
+.slider-label,
+.output-label,
+.field-label,
+.specs-title,
+.regime-act {
+  font-size: clamp(14px, 1.6vw, 17px);
+  font-weight: 800;
+}
+
+.slider-val,
+.spec-val,
+.output-num {
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 0.04em;
+}
+
+.slider-val {
+  font-size: clamp(20px, 2.5vw, 28px);
+}
+
+.output-num {
+  font-size: clamp(44px, 6vw, 64px);
+}
+
+.spec-val {
+  font-size: clamp(16px, 2vw, 20px);
+}
+
+.feat-title {
+  font-size: clamp(24px, 3vw, 32px);
+}
+
+.feat-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.calc-panel {
+  max-width: none;
+}
+
+.apply-form {
+  max-width: min(560px, 100%);
+}
+
+.indemnity-block,
+.disclaimer {
+  margin-left: 0;
+  margin-right: 0;
+  width: 100%;
+}
+
+.unit-split {
+  width: 100%;
+}
+
+.unit-info {
+  max-width: none;
+}
+
+@media (max-width: 900px) {
+  nav {
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .nav-links {
+    flex-wrap: wrap;
+    gap: 14px 20px;
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .hero {
+    flex-direction: column;
+    text-align: left;
+    gap: 32px;
+  }
+
+  .hero-left,
+  .hero-right {
+    flex: 1 1 100%;
+    max-width: 100%;
+  }
+
+  .hero-right {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+
+  .feat-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .unit-split {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .unit-visual,
+  .unit-img {
+    width: min(100%, 320px);
+    height: auto;
+    max-height: 420px;
+  }
+
+  .regime-body {
+    padding-left: 0;
+  }
+
+  .toggle-bar {
+    flex-direction: column;
+  }
+
+  .toggle-btn:first-child {
+    border-right: 1px solid var(--border);
+  }
+
+  footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-btns {
+    width: 100%;
+  }
+
+  .hero-btns .btn-pink,
+  .hero-btns .btn-outline {
+    width: 100%;
+    text-align: center;
+  }
+
+  .calc-output {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+}
