@@ -1,5 +1,5 @@
-import { Link } from 'react-router-dom';
 import { FAQ_ITEMS } from '../data/content';
+import { InquiryForm } from '../components/contact/InquiryForm';
 import { Footer } from '../components/layout/Footer';
 import { Eyebrow } from '../components/ui/Eyebrow';
 import { FaqStructuredData } from '../seo/FaqStructuredData';
@@ -30,18 +30,7 @@ export function FaqPage() {
           </article>
         ))}
       </section>
-      <section className="section hw-cta">
-        <h2 className="cta-title">STILL HAVE QUESTIONS?</h2>
-        <p className="cta-sub">Reach out or submit an application — we respond within one business day.</p>
-        <div className="hero-btns" style={{ justifyContent: 'center' }}>
-          <Link to="/contact" className="btn-outline">
-            Contact Us
-          </Link>
-          <Link to="/apply" className="btn-pink">
-            Apply Now
-          </Link>
-        </div>
-      </section>
+      <InquiryForm />
       <Footer />
     </main>
   );
