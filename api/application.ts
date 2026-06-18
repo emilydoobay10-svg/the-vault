@@ -1,9 +1,11 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { ApplicationEmail } from '../emails/ApplicationEmail';
-import { sendFormEmail } from '../lib/sendEmail';
+import { sendApplicationEmail } from '../lib/emails/sendApplicationEmail';
+import { getSafeEmailErrorMessage } from '../lib/sendEmail';
 import { apiError, isValidEmail, sanitizeText } from '../lib/validation';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  res.setHeader('Content-Type', 'application/json');
+
   console.log('[api/application] request received', {
     method: req.method,
     url: req.url,
@@ -13,7 +15,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (req.method !== 'POST') {
     console.log('[api/application] rejected non-POST request');
-    return res.status(405).json({ error: 'Method not allowed' });
+    return res.status(405).json({ ok: false, error: 'Method not allowed' });
   }
 
   try {
@@ -28,27 +30,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!venueName || !contactName || !email || !venueType) {
       console.log('[api/application] validation failed: missing fields');
       const err = apiError('Please complete all required fields.');
-      return res.status(err.status).json({ error: err.message });
+      return res.status(err.status).json({ ok: false, error: err.message });
     }
 
     if (!isValidEmail(email)) {
       console.log('[api/application] validation failed: invalid email');
       const err = apiError('Please enter a valid email address.');
-      return res.status(err.status).json({ error: err.message });
+      return res.status(err.status).json({ ok: false, error: err.message });
     }
 
     console.log('[api/application] sending email via Resend');
-    await sendFormEmail(
-      `Partner Application — ${venueName}`,
-      ApplicationEmail({ venueName, contactName, email, venueType }),
-    );
+    await sendApplicationEmail({ venueName, contactName, email, venueType });
 
     console.log('[api/application] email sent successfully');
     return res.status(200).json({ ok: true });
   } catch (error) {
     console.error('[api/application] submission failed:', error);
     return res.status(500).json({
-      error: 'Unable to send your application right now. Please try again shortly.',
+      ok: false,
+      error: getSafeEmailErrorMessage(error),
     });
   }
 }
