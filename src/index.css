@@ -128,7 +128,17 @@ input[type=range]{width:100%;accent-color:var(--pink);}
 .field-label{font-size:12px;font-weight:700;color:var(--gray);display:block;margin-bottom:7px;letter-spacing:0.04em;}
 .field{width:100%;background:#000;border:1px solid var(--border);color:var(--white);padding:11px 14px;font-size:14px;font-family:'DM Sans',sans-serif;margin-bottom:14px;font-weight:500;}
 .field:focus{outline:none;border-color:var(--purple);}
+.field:disabled{opacity:0.6;cursor:not-allowed;}
+.field-textarea{resize:vertical;min-height:120px;}
 .submit-btn{width:100%;background:var(--pink);color:#fff;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:0.1em;padding:14px;border:none;cursor:pointer;}
+.submit-btn:disabled{opacity:0.7;cursor:not-allowed;}
+.form-feedback{font-size:14px;font-weight:600;line-height:1.6;margin-bottom:16px;padding:12px 14px;border:1px solid var(--border);}
+.form-feedback-success{color:var(--green);background:rgba(0,255,133,0.08);border-color:rgba(0,255,133,0.35);}
+.form-feedback-error{color:#ff6b6b;background:rgba(255,107,107,0.08);border-color:rgba(255,107,107,0.35);}
+.contact-form-section .section-body{margin-bottom:24px;}
+.contact-form,.inquiry-form{max-width:520px;margin:0 auto;}
+.inquiry-section{text-align:center;}
+.inquiry-section .apply-form{text-align:left;}
 
 /* ── HARDWARE PAGE ── */
 .hw-header{padding:56px 32px 48px;border-bottom:1px solid var(--border);}

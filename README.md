@@ -73,5 +73,33 @@ src/
 
 ## Notes
 
-- No environment variables are required — the site is fully static.
-- The apply form is client-side only (shows a confirmation state; no backend submission yet).
+- Form submissions are emailed via [Resend](https://resend.com) using React Email templates and Vercel serverless functions. Nothing is stored locally or in a database.
+- All submissions go to **thevaultvendr@gmail.com**.
+
+### Email setup (Vercel)
+
+1. Copy `.env.example` to `.env.local` for local testing.
+2. Create a [Resend](https://resend.com) account and add an API key.
+3. Verify your sending domain in Resend, then set `RESEND_FROM_EMAIL` (e.g. `The Vault Vending <hello@yourdomain.com>`).
+4. In the Vercel project dashboard, add environment variables:
+   - `RESEND_API_KEY`
+   - `RESEND_FROM_EMAIL`
+5. Redeploy after adding env vars.
+
+### Form endpoints
+
+| Form | Page | API route |
+|------|------|-----------|
+| Partner application | `/`, `/apply` | `POST /api/application` |
+| Contact message | `/contact` | `POST /api/contact` |
+| FAQ inquiry | `/faq` | `POST /api/inquiry` |
+
+### Local development with API routes
+
+Vite serves the frontend only. To test form submissions locally, run:
+
+```bash
+npm run dev:vercel
+```
+
+This starts Vercel dev, which serves both the Vite app and `/api/*` serverless functions.

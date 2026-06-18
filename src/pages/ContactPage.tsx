@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { ContactForm } from '../components/contact/ContactForm';
 import { Footer } from '../components/layout/Footer';
 import { Eyebrow } from '../components/ui/Eyebrow';
 import { PageSeo } from '../seo/PageSeo';
@@ -49,6 +50,7 @@ export function ContactPage() {
           <p className="contact-card-meta">British Columbia, Canada · 19+ Licensed Venues Only</p>
         </article>
       </section>
+      <ContactForm />
       <Footer />
     </main>
   );
