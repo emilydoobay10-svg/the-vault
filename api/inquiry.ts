@@ -1,7 +1,8 @@
+import { createElement } from 'react';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { sendInquiryEmail } from '../lib/emails/sendInquiryEmail';
-import { getSafeEmailErrorMessage } from '../lib/sendEmail';
-import { apiError, isValidEmail, sanitizeText } from '../lib/validation';
+import { InquiryEmail } from './_lib/emails/InquiryEmail';
+import { getSafeEmailErrorMessage, sendFormEmail } from './_lib/sendEmail';
+import { apiError, isValidEmail, sanitizeText } from './_lib/validation';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Content-Type', 'application/json');
@@ -27,7 +28,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(err.status).json({ ok: false, error: err.message });
     }
 
-    await sendInquiryEmail({ name, email, message });
+    await sendFormEmail(
+      `Inquiry — ${name}`,
+      createElement(InquiryEmail, { name, email, message }),
+    );
 
     return res.status(200).json({ ok: true });
   } catch (error) {
