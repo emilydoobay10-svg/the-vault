@@ -1,7 +1,8 @@
+import { createElement } from 'react';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { sendApplicationEmail } from '../lib/emails/sendApplicationEmail';
-import { getSafeEmailErrorMessage } from '../lib/sendEmail';
-import { apiError, isValidEmail, sanitizeText } from '../lib/validation';
+import { ApplicationEmail } from './_lib/emails/ApplicationEmail';
+import { getSafeEmailErrorMessage, sendFormEmail } from './_lib/sendEmail';
+import { apiError, isValidEmail, sanitizeText } from './_lib/validation';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Content-Type', 'application/json');
@@ -40,7 +41,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     console.log('[api/application] sending email via Resend');
-    await sendApplicationEmail({ venueName, contactName, email, venueType });
+    await sendFormEmail(
+      `Partner Application — ${venueName}`,
+      createElement(ApplicationEmail, { venueName, contactName, email, venueType }),
+    );
 
     console.log('[api/application] email sent successfully');
     return res.status(200).json({ ok: true });
