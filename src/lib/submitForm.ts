@@ -1,8 +1,14 @@
+import { HONEYPOT_FIELD } from './formSecurity';
+
 export type SubmitStatus = 'idle' | 'loading' | 'success' | 'error';
 
 type ApiResponse = {
   ok?: boolean;
   error?: string;
+};
+
+type SubmitFormOptions = {
+  turnstileToken?: string | null;
 };
 
 function isApiResponse(value: unknown): value is ApiResponse {
@@ -12,8 +18,17 @@ function isApiResponse(value: unknown): value is ApiResponse {
 export async function submitForm(
   endpoint: string,
   data: Record<string, string>,
+  options?: SubmitFormOptions,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
-  console.log('[submitForm] starting request', { endpoint, fields: Object.keys(data) });
+  const payload: Record<string, string> = { ...data };
+
+  if (options?.turnstileToken) {
+    payload.turnstileToken = options.turnstileToken;
+  }
+
+  if (!(HONEYPOT_FIELD in payload)) {
+    payload[HONEYPOT_FIELD] = '';
+  }
 
   try {
     const response = await fetch(endpoint, {
@@ -22,19 +37,12 @@ export async function submitForm(
         Accept: 'application/json',
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify(payload),
     });
 
     const contentType = response.headers.get('content-type') ?? '';
-    console.log('[submitForm] response received', {
-      endpoint,
-      status: response.status,
-      ok: response.ok,
-      contentType,
-    });
 
     if (!contentType.includes('application/json')) {
-      console.error('[submitForm] non-JSON response', { endpoint, status: response.status, contentType });
       return {
         ok: false,
         error: 'Form submission failed. The server did not respond correctly. Please try again.',
@@ -44,18 +52,14 @@ export async function submitForm(
     let body: unknown;
     try {
       body = await response.json();
-    } catch (parseError) {
-      console.error('[submitForm] JSON parse failed', { endpoint, parseError });
+    } catch {
       return {
         ok: false,
         error: 'Form submission failed. The server returned an invalid response. Please try again.',
       };
     }
 
-    console.log('[submitForm] parsed response body', { endpoint, body });
-
     if (!isApiResponse(body)) {
-      console.error('[submitForm] invalid response shape', { endpoint, body });
       return {
         ok: false,
         error: 'Form submission failed. The server returned an invalid response. Please try again.',
@@ -63,7 +67,6 @@ export async function submitForm(
     }
 
     if (!response.ok) {
-      console.error('[submitForm] HTTP error response', { endpoint, status: response.status, body });
       return {
         ok: false,
         error: body.error ?? 'Something went wrong. Please try again.',
@@ -71,17 +74,14 @@ export async function submitForm(
     }
 
     if (body.ok !== true) {
-      console.error('[submitForm] missing ok:true in success response', { endpoint, body });
       return {
         ok: false,
         error: 'Form submission failed. The server returned an invalid response. Please try again.',
       };
     }
 
-    console.log('[submitForm] success', { endpoint });
     return { ok: true };
-  } catch (error) {
-    console.error('[submitForm] network/request failed', { endpoint, error });
+  } catch {
     return {
       ok: false,
       error: 'Network error. Check your connection and try again.',

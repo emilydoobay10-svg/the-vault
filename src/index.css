@@ -139,6 +139,8 @@ input[type=range]{width:100%;accent-color:var(--pink);}
 .contact-form,.inquiry-form{max-width:520px;margin:0 auto;}
 .inquiry-section{text-align:center;}
 .inquiry-section .apply-form{text-align:left;}
+.honeypot-field{position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden;}
+.turnstile-widget{margin:4px 0 16px;}
 
 /* ── HARDWARE PAGE ── */
 .hw-header{padding:56px 32px 48px;border-bottom:1px solid var(--border);}

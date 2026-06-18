@@ -1,86 +1,62 @@
-import { useState, type FormEvent } from 'react';
+import { useCallback, useState, type FormEvent } from 'react';
 import { VENUE_TYPES } from '../../data/content';
+import { HONEYPOT_FIELD, TURNSTILE_REQUIRED } from '../../lib/formSecurity';
+import { submitForm, type SubmitStatus } from '../../lib/submitForm';
 import { FormFeedback } from '../ui/FormFeedback';
+import { FormProtectionFields } from '../ui/FormProtectionFields';
 
 type ApplyFormProps = {
   showHeader?: boolean;
 };
 
-type FormStatus = 'idle' | 'loading' | 'success' | 'error';
-
 export function ApplyForm({ showHeader = true }: ApplyFormProps) {
-  const [status, setStatus] = useState<FormStatus>('idle');
+  const [status, setStatus] = useState<SubmitStatus>('idle');
   const [errorMessage, setErrorMessage] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+
+  const handleTurnstileTokenChange = useCallback((token: string | null) => {
+    setTurnstileToken(token);
+  }, []);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = event.currentTarget;
 
+    if (TURNSTILE_REQUIRED && !turnstileToken) {
+      setErrorMessage('Please complete the security check before submitting.');
+      setStatus('error');
+      return;
+    }
+
     setStatus('loading');
     setErrorMessage('');
 
     const formData = new FormData(form);
-    const payload = {
-      venueName: String(formData.get('venueName') ?? ''),
-      contactName: String(formData.get('contactName') ?? ''),
-      email: String(formData.get('email') ?? ''),
-      venueType: String(formData.get('venueType') ?? ''),
-    };
+    const result = await submitForm(
+      '/api/application',
+      {
+        venueName: String(formData.get('venueName') ?? ''),
+        contactName: String(formData.get('contactName') ?? ''),
+        email: String(formData.get('email') ?? ''),
+        venueType: String(formData.get('venueType') ?? ''),
+        [HONEYPOT_FIELD]: String(formData.get(HONEYPOT_FIELD) ?? ''),
+      },
+      { turnstileToken },
+    );
 
-    try {
-      const response = await fetch('/api/application', {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const contentType = response.headers.get('content-type') ?? '';
-      if (!contentType.includes('application/json')) {
-        setErrorMessage(
-          'Submission failed. The server did not respond correctly. Please try again.',
-        );
-        setStatus('error');
-        return;
-      }
-
-      let body: unknown;
-      try {
-        body = await response.json();
-      } catch {
-        setErrorMessage(
-          'Submission failed. The server returned an invalid response. Please try again.',
-        );
-        setStatus('error');
-        return;
-      }
-
-      const data =
-        typeof body === 'object' && body !== null
-          ? (body as { ok?: unknown; error?: unknown })
-          : null;
-
-      if (response.ok && data?.ok === true) {
-        setStatus('success');
-        form.reset();
-        return;
-      }
-
-      const apiError =
-        typeof data?.error === 'string' && data.error.trim()
-          ? data.error
-          : 'Submission failed. Please try again.';
-      setErrorMessage(apiError);
-      setStatus('error');
-    } catch {
-      setErrorMessage('Network error. Check your connection and try again.');
-      setStatus('error');
+    if (result.ok) {
+      setStatus('success');
+      form.reset();
+      setTurnstileToken(null);
+      return;
     }
+
+    setErrorMessage(result.error);
+    setStatus('error');
   };
 
   const isDisabled = status === 'loading' || status === 'success';
+  const canSubmit = !isDisabled && (!TURNSTILE_REQUIRED || Boolean(turnstileToken));
 
   return (
     <section className="apply-section" id="apply">
@@ -147,7 +123,11 @@ export function ApplyForm({ showHeader = true }: ApplyFormProps) {
             <option key={type}>{type}</option>
           ))}
         </select>
-        <button type="submit" className="submit-btn" disabled={isDisabled}>
+        <FormProtectionFields
+          disabled={isDisabled}
+          onTurnstileTokenChange={handleTurnstileTokenChange}
+        />
+        <button type="submit" className="submit-btn" disabled={!canSubmit}>
           {status === 'loading'
             ? 'SUBMITTING...'
             : status === 'success'
