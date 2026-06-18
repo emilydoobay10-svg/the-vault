@@ -1,19 +1,11 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Resend } from 'resend';
+import { enforceFormSecurity } from './_lib/formSecurity';
+import { logFormEvent } from './_lib/logger';
+import { isAllowedVenueType, isValidEmail, sanitizeText } from './_lib/validation';
 
+const ENDPOINT = 'application';
 const RECIPIENT_EMAIL = 'thevaultvendr@gmail.com';
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-function sanitizeText(value: unknown, maxLength: number): string | null {
-  if (typeof value !== 'string') return null;
-  const trimmed = value.trim();
-  if (!trimmed || trimmed.length > maxLength) return null;
-  return trimmed;
-}
-
-function isValidEmail(value: string): boolean {
-  return EMAIL_PATTERN.test(value.trim());
-}
 
 function escapeHtml(value: string): string {
   return value
@@ -108,25 +100,49 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ ok: false, error: 'Method not allowed' });
   }
 
-  try {
-    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+  const security = await enforceFormSecurity(req, ENDPOINT);
+  if (!security.allowed) {
+    if ('spam' in security && security.spam) {
+      return res.status(200).json({ ok: true });
+    }
+    return res.status(security.status).json({ ok: false, error: security.error });
+  }
 
-    const venueName = sanitizeText(body?.venueName, 200);
-    const contactName = sanitizeText(body?.contactName, 200);
-    const email = sanitizeText(body?.email, 320);
-    const venueType = sanitizeText(body?.venueType, 100);
+  try {
+    const body = security.body;
+
+    const venueName = sanitizeText(body.venueName, 200);
+    const contactName = sanitizeText(body.contactName, 200);
+    const email = sanitizeText(body.email, 320);
+    const venueType = sanitizeText(body.venueType, 100);
 
     if (!venueName || !contactName || !email || !venueType) {
+      logFormEvent('warn', ENDPOINT, 'validation_failed', {
+        clientIp: security.clientIp,
+        reason: 'missing_fields',
+      });
       return res.status(400).json({ ok: false, error: 'Please complete all required fields.' });
     }
 
     if (!isValidEmail(email)) {
+      logFormEvent('warn', ENDPOINT, 'validation_failed', {
+        clientIp: security.clientIp,
+        reason: 'invalid_email',
+      });
       return res.status(400).json({ ok: false, error: 'Please enter a valid email address.' });
+    }
+
+    if (!isAllowedVenueType(venueType)) {
+      logFormEvent('warn', ENDPOINT, 'validation_failed', {
+        clientIp: security.clientIp,
+        reason: 'invalid_venue_type',
+      });
+      return res.status(400).json({ ok: false, error: 'Please select a valid venue type.' });
     }
 
     const apiKey = process.env.RESEND_API_KEY?.trim();
     if (!apiKey || !apiKey.startsWith('re_')) {
-      console.error('[api/application] RESEND_API_KEY is missing or invalid');
+      logFormEvent('error', ENDPOINT, 'resend_not_configured', { clientIp: security.clientIp });
       return res.status(500).json({
         ok: false,
         error: 'Email delivery is temporarily unavailable. Please try again later.',
@@ -144,16 +160,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
 
     if (error) {
-      console.error('[api/application] Resend error:', error);
+      logFormEvent('error', ENDPOINT, 'resend_error', {
+        clientIp: security.clientIp,
+        error: error.message,
+      });
       return res.status(500).json({
         ok: false,
         error: 'Unable to send your application right now. Please try again shortly.',
       });
     }
 
+    logFormEvent('info', ENDPOINT, 'submission_sent', { clientIp: security.clientIp });
     return res.status(200).json({ ok: true });
   } catch (error) {
-    console.error('[api/application] submission failed:', error);
+    logFormEvent('error', ENDPOINT, 'submission_failed', {
+      clientIp: security.clientIp,
+      error: error instanceof Error ? error.message : 'unknown_error',
+    });
     return res.status(500).json({
       ok: false,
       error: 'Unable to send your application right now. Please try again shortly.',

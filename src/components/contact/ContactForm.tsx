@@ -1,27 +1,47 @@
-import { useState, type FormEvent } from 'react';
+import { useCallback, useState, type FormEvent } from 'react';
+import { HONEYPOT_FIELD, TURNSTILE_REQUIRED } from '../../lib/formSecurity';
 import { submitForm, type SubmitStatus } from '../../lib/submitForm';
 import { FormFeedback } from '../ui/FormFeedback';
+import { FormProtectionFields } from '../ui/FormProtectionFields';
 
 export function ContactForm() {
   const [status, setStatus] = useState<SubmitStatus>('idle');
   const [errorMessage, setErrorMessage] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+
+  const handleTurnstileTokenChange = useCallback((token: string | null) => {
+    setTurnstileToken(token);
+  }, []);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    if (TURNSTILE_REQUIRED && !turnstileToken) {
+      setErrorMessage('Please complete the security check before submitting.');
+      setStatus('error');
+      return;
+    }
+
     setStatus('loading');
     setErrorMessage('');
 
     const formData = new FormData(event.currentTarget);
-    const result = await submitForm('/api/contact', {
-      name: String(formData.get('name') ?? ''),
-      email: String(formData.get('email') ?? ''),
-      subject: String(formData.get('subject') ?? ''),
-      message: String(formData.get('message') ?? ''),
-    });
+    const result = await submitForm(
+      '/api/contact',
+      {
+        name: String(formData.get('name') ?? ''),
+        email: String(formData.get('email') ?? ''),
+        subject: String(formData.get('subject') ?? ''),
+        message: String(formData.get('message') ?? ''),
+        [HONEYPOT_FIELD]: String(formData.get(HONEYPOT_FIELD) ?? ''),
+      },
+      { turnstileToken },
+    );
 
     if (result.ok) {
       setStatus('success');
       event.currentTarget.reset();
+      setTurnstileToken(null);
       return;
     }
 
@@ -30,6 +50,7 @@ export function ContactForm() {
   };
 
   const isDisabled = status === 'loading' || status === 'success';
+  const canSubmit = !isDisabled && (!TURNSTILE_REQUIRED || Boolean(turnstileToken));
 
   return (
     <section className="section contact-form-section" id="contact-form">
@@ -92,7 +113,11 @@ export function ContactForm() {
           required
           disabled={isDisabled}
         />
-        <button type="submit" className="submit-btn" disabled={isDisabled}>
+        <FormProtectionFields
+          disabled={isDisabled}
+          onTurnstileTokenChange={handleTurnstileTokenChange}
+        />
+        <button type="submit" className="submit-btn" disabled={!canSubmit}>
           {status === 'loading' ? 'SENDING...' : status === 'success' ? 'MESSAGE SENT' : 'SEND MESSAGE'}
         </button>
       </form>
