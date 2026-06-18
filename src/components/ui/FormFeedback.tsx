@@ -6,6 +6,16 @@ type FormFeedbackProps = {
   successMessage: string;
 };
 
+const DEFAULT_ERROR_MESSAGE = 'Something went wrong. Please try again.';
+
+function toErrorMessage(value: unknown): string {
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    return trimmed || DEFAULT_ERROR_MESSAGE;
+  }
+  return DEFAULT_ERROR_MESSAGE;
+}
+
 export function FormFeedback({ status, errorMessage, successMessage }: FormFeedbackProps) {
   if (status === 'success') {
     return (
@@ -18,7 +28,7 @@ export function FormFeedback({ status, errorMessage, successMessage }: FormFeedb
   if (status === 'error') {
     return (
       <p className="form-feedback form-feedback-error" role="alert">
-        {errorMessage ?? 'Something went wrong. Please try again.'}
+        {toErrorMessage(errorMessage)}
       </p>
     );
   }

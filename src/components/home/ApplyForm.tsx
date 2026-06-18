@@ -9,6 +9,16 @@ type ApplyFormProps = {
   showHeader?: boolean;
 };
 
+const SUBMIT_ERROR_MESSAGE = 'Submission failed. Please try again.';
+
+function toSubmitErrorMessage(value: unknown): string {
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    return trimmed || SUBMIT_ERROR_MESSAGE;
+  }
+  return SUBMIT_ERROR_MESSAGE;
+}
+
 export function ApplyForm({ showHeader = true }: ApplyFormProps) {
   const [status, setStatus] = useState<SubmitStatus>('idle');
   const [errorMessage, setErrorMessage] = useState('');
@@ -31,28 +41,33 @@ export function ApplyForm({ showHeader = true }: ApplyFormProps) {
     setStatus('loading');
     setErrorMessage('');
 
-    const formData = new FormData(form);
-    const result = await submitForm(
-      '/api/application',
-      {
-        venueName: String(formData.get('venueName') ?? ''),
-        contactName: String(formData.get('contactName') ?? ''),
-        email: String(formData.get('email') ?? ''),
-        venueType: String(formData.get('venueType') ?? ''),
-        [HONEYPOT_FIELD]: String(formData.get(HONEYPOT_FIELD) ?? ''),
-      },
-      { turnstileToken },
-    );
+    try {
+      const formData = new FormData(form);
+      const result = await submitForm(
+        '/api/application',
+        {
+          venueName: String(formData.get('venueName') ?? ''),
+          contactName: String(formData.get('contactName') ?? ''),
+          email: String(formData.get('email') ?? ''),
+          venueType: String(formData.get('venueType') ?? ''),
+          [HONEYPOT_FIELD]: String(formData.get(HONEYPOT_FIELD) ?? ''),
+        },
+        { turnstileToken },
+      );
 
-    if (result.ok) {
-      setStatus('success');
-      form.reset();
-      setTurnstileToken(null);
-      return;
+      if (result.ok) {
+        setStatus('success');
+        form.reset();
+        setTurnstileToken(null);
+        return;
+      }
+
+      setErrorMessage(toSubmitErrorMessage(result.error));
+      setStatus('error');
+    } catch {
+      setErrorMessage(SUBMIT_ERROR_MESSAGE);
+      setStatus('error');
     }
-
-    setErrorMessage(result.error);
-    setStatus('error');
   };
 
   const isDisabled = status === 'loading' || status === 'success';
