@@ -1,11 +1,13 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { InquiryEmail } from '../emails/InquiryEmail';
-import { sendFormEmail } from '../lib/sendEmail';
+import { sendInquiryEmail } from '../lib/emails/sendInquiryEmail';
+import { getSafeEmailErrorMessage } from '../lib/sendEmail';
 import { apiError, isValidEmail, sanitizeText } from '../lib/validation';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  res.setHeader('Content-Type', 'application/json');
+
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    return res.status(405).json({ ok: false, error: 'Method not allowed' });
   }
 
   try {
@@ -17,24 +19,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (!name || !email || !message) {
       const err = apiError('Please complete all required fields.');
-      return res.status(err.status).json({ error: err.message });
+      return res.status(err.status).json({ ok: false, error: err.message });
     }
 
     if (!isValidEmail(email)) {
       const err = apiError('Please enter a valid email address.');
-      return res.status(err.status).json({ error: err.message });
+      return res.status(err.status).json({ ok: false, error: err.message });
     }
 
-    await sendFormEmail(
-      `Inquiry — ${name}`,
-      InquiryEmail({ name, email, message }),
-    );
+    await sendInquiryEmail({ name, email, message });
 
     return res.status(200).json({ ok: true });
   } catch (error) {
-    console.error('Inquiry submission failed:', error);
+    console.error('[api/inquiry] submission failed:', error);
     return res.status(500).json({
-      error: 'Unable to send your inquiry right now. Please try again shortly.',
+      ok: false,
+      error: getSafeEmailErrorMessage(error),
     });
   }
 }

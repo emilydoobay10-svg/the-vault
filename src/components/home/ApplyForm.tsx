@@ -57,15 +57,22 @@ export function ApplyForm({ showHeader = true }: ApplyFormProps) {
         return;
       }
 
-      const data = body as { ok?: boolean; error?: string };
+      const data =
+        typeof body === 'object' && body !== null
+          ? (body as { ok?: unknown; error?: unknown })
+          : null;
 
-      if (response.ok && data.ok === true) {
+      if (response.ok && data?.ok === true) {
         setStatus('success');
         form.reset();
         return;
       }
 
-      setErrorMessage(data.error ?? 'Submission failed. Please try again.');
+      const apiError =
+        typeof data?.error === 'string' && data.error.trim()
+          ? data.error
+          : 'Submission failed. Please try again.';
+      setErrorMessage(apiError);
       setStatus('error');
     } catch {
       setErrorMessage('Network error. Check your connection and try again.');

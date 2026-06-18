@@ -1,22 +1,29 @@
 import { render } from '@react-email/render';
 import { Resend } from 'resend';
 import type { ReactElement } from 'react';
+import { getSafeEmailErrorMessage, resolveResendConfig } from './resendConfig';
 
 export const RECIPIENT_EMAIL = 'thevaultvendr@gmail.com';
 
 export async function sendFormEmail(subject: string, template: ReactElement): Promise<void> {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
-    throw new Error('Email service is not configured.');
+  const { apiKey, from } = resolveResendConfig();
+
+  console.log('[sendFormEmail] sending', {
+    to: RECIPIENT_EMAIL,
+    from,
+    subject,
+  });
+
+  let html: string;
+  try {
+    html = await render(template);
+  } catch (renderError) {
+    console.error('[sendFormEmail] template render failed:', renderError);
+    throw new Error('Failed to prepare email content.');
   }
 
-  const from =
-    process.env.RESEND_FROM_EMAIL ?? 'The Vault Vending <onboarding@resend.dev>';
-
   const resend = new Resend(apiKey);
-  const html = await render(template);
-
-  const { error } = await resend.emails.send({
+  const { data, error } = await resend.emails.send({
     from,
     to: RECIPIENT_EMAIL,
     subject,
@@ -24,6 +31,11 @@ export async function sendFormEmail(subject: string, template: ReactElement): Pr
   });
 
   if (error) {
+    console.error('[sendFormEmail] Resend API error:', error);
     throw new Error(error.message);
   }
+
+  console.log('[sendFormEmail] sent', { id: data?.id });
 }
+
+export { getSafeEmailErrorMessage };
