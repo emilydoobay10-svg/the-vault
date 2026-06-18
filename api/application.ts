@@ -1,11 +1,29 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Resend } from 'resend';
-import { enforceFormSecurity } from './_lib/formSecurity';
-import { logFormEvent } from './_lib/logger';
-import { isAllowedVenueType, isValidEmail, sanitizeText } from './_lib/validation';
 
-const ENDPOINT = 'application';
 const RECIPIENT_EMAIL = 'thevaultvendr@gmail.com';
+const HONEYPOT_FIELD = 'companyWebsite';
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const CONTROL_CHAR_PATTERN = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g;
+const TURNSTILE_VERIFY_URL = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
+
+const ALLOWED_VENUE_TYPES = [
+  'Nightclub',
+  'Lounge / Bar',
+  'Live Music Venue',
+  'Event Space',
+  'Hotel',
+] as const;
+
+const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
+const RATE_LIMIT_MAX_REQUESTS = 5;
+
+type RateLimitEntry = {
+  count: number;
+  windowStart: number;
+};
+
+const rateLimitBuckets = new Map<string, RateLimitEntry>();
 
 function escapeHtml(value: string): string {
   return value
@@ -13,6 +31,130 @@ function escapeHtml(value: string): string {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+function isValidEmail(value: string): boolean {
+  return EMAIL_PATTERN.test(value.trim());
+}
+
+function stripControlChars(value: string): string {
+  return value.replace(CONTROL_CHAR_PATTERN, '');
+}
+
+function sanitizeText(value: unknown, maxLength: number): string | null {
+  if (typeof value !== 'string') return null;
+  const trimmed = stripControlChars(value.trim());
+  if (!trimmed || trimmed.length > maxLength) return null;
+  return trimmed;
+}
+
+function isAllowedVenueType(value: string): boolean {
+  return (ALLOWED_VENUE_TYPES as readonly string[]).includes(value);
+}
+
+function isHoneypotTripped(value: unknown): boolean {
+  if (typeof value !== 'string') return false;
+  return value.trim().length > 0;
+}
+
+function parseJsonBody(req: VercelRequest): Record<string, unknown> {
+  const raw = req.body;
+
+  if (raw === null || raw === undefined) {
+    return {};
+  }
+
+  if (typeof raw === 'string') {
+    const parsed: unknown = JSON.parse(raw);
+    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+      throw new Error('Invalid JSON body');
+    }
+    return parsed as Record<string, unknown>;
+  }
+
+  if (typeof raw === 'object' && !Array.isArray(raw)) {
+    return raw as Record<string, unknown>;
+  }
+
+  throw new Error('Invalid JSON body');
+}
+
+function getClientIp(req: VercelRequest): string {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (typeof forwarded === 'string' && forwarded.trim()) {
+    return forwarded.split(',')[0]?.trim() ?? 'unknown';
+  }
+  if (Array.isArray(forwarded) && forwarded[0]) {
+    return forwarded[0].split(',')[0]?.trim() ?? 'unknown';
+  }
+
+  const realIp = req.headers['x-real-ip'];
+  if (typeof realIp === 'string' && realIp.trim()) {
+    return realIp.trim();
+  }
+
+  return req.socket?.remoteAddress ?? 'unknown';
+}
+
+function checkRateLimit(clientIp: string): boolean {
+  const now = Date.now();
+
+  for (const [key, entry] of rateLimitBuckets) {
+    if (now - entry.windowStart >= RATE_LIMIT_WINDOW_MS) {
+      rateLimitBuckets.delete(key);
+    }
+  }
+
+  const key = `application:${clientIp}`;
+  const current = rateLimitBuckets.get(key);
+
+  if (!current || now - current.windowStart >= RATE_LIMIT_WINDOW_MS) {
+    rateLimitBuckets.set(key, { count: 1, windowStart: now });
+    return true;
+  }
+
+  if (current.count >= RATE_LIMIT_MAX_REQUESTS) {
+    return false;
+  }
+
+  current.count += 1;
+  rateLimitBuckets.set(key, current);
+  return true;
+}
+
+async function verifyTurnstileToken(
+  token: unknown,
+  remoteIp: string,
+): Promise<{ ok: true } | { ok: false }> {
+  const secret = process.env.TURNSTILE_SECRET_KEY?.trim();
+  if (!secret) {
+    return { ok: true };
+  }
+
+  if (typeof token !== 'string' || !token.trim()) {
+    return { ok: false };
+  }
+
+  try {
+    const response = await fetch(TURNSTILE_VERIFY_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        secret,
+        response: token.trim(),
+        remoteip: remoteIp,
+      }),
+    });
+
+    if (!response.ok) {
+      return { ok: false };
+    }
+
+    const result = (await response.json()) as { success?: boolean };
+    return result.success ? { ok: true } : { ok: false };
+  } catch {
+    return { ok: false };
+  }
 }
 
 function resolveResendFrom(): string {
@@ -100,49 +242,58 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ ok: false, error: 'Method not allowed' });
   }
 
-  const security = await enforceFormSecurity(req, ENDPOINT);
-  if (!security.allowed) {
-    if ('spam' in security && security.spam) {
-      return res.status(200).json({ ok: true });
+  const clientIp = getClientIp(req);
+
+  let body: Record<string, unknown>;
+  try {
+    body = parseJsonBody(req);
+  } catch {
+    return res.status(400).json({ ok: false, error: 'Invalid request. Please refresh and try again.' });
+  }
+
+  if (isHoneypotTripped(body[HONEYPOT_FIELD])) {
+    return res.status(200).json({ ok: true });
+  }
+
+  if (!checkRateLimit(clientIp)) {
+    return res.status(429).json({
+      ok: false,
+      error: 'Too many submissions. Please wait a few minutes and try again.',
+    });
+  }
+
+  const turnstileSecret = process.env.TURNSTILE_SECRET_KEY?.trim();
+  if (turnstileSecret) {
+    const turnstile = await verifyTurnstileToken(body.turnstileToken, clientIp);
+    if (!turnstile.ok) {
+      return res.status(400).json({
+        ok: false,
+        error: 'Security verification failed. Please complete the check and try again.',
+      });
     }
-    return res.status(security.status).json({ ok: false, error: security.error });
   }
 
   try {
-    const body = security.body;
-
     const venueName = sanitizeText(body.venueName, 200);
     const contactName = sanitizeText(body.contactName, 200);
     const email = sanitizeText(body.email, 320);
     const venueType = sanitizeText(body.venueType, 100);
 
     if (!venueName || !contactName || !email || !venueType) {
-      logFormEvent('warn', ENDPOINT, 'validation_failed', {
-        clientIp: security.clientIp,
-        reason: 'missing_fields',
-      });
       return res.status(400).json({ ok: false, error: 'Please complete all required fields.' });
     }
 
     if (!isValidEmail(email)) {
-      logFormEvent('warn', ENDPOINT, 'validation_failed', {
-        clientIp: security.clientIp,
-        reason: 'invalid_email',
-      });
       return res.status(400).json({ ok: false, error: 'Please enter a valid email address.' });
     }
 
     if (!isAllowedVenueType(venueType)) {
-      logFormEvent('warn', ENDPOINT, 'validation_failed', {
-        clientIp: security.clientIp,
-        reason: 'invalid_venue_type',
-      });
       return res.status(400).json({ ok: false, error: 'Please select a valid venue type.' });
     }
 
     const apiKey = process.env.RESEND_API_KEY?.trim();
     if (!apiKey || !apiKey.startsWith('re_')) {
-      logFormEvent('error', ENDPOINT, 'resend_not_configured', { clientIp: security.clientIp });
+      console.error('[api/application] RESEND_API_KEY is missing or invalid');
       return res.status(500).json({
         ok: false,
         error: 'Email delivery is temporarily unavailable. Please try again later.',
@@ -160,23 +311,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
 
     if (error) {
-      logFormEvent('error', ENDPOINT, 'resend_error', {
-        clientIp: security.clientIp,
-        error: error.message,
-      });
+      console.error('[api/application] Resend error:', error);
       return res.status(500).json({
         ok: false,
         error: 'Unable to send your application right now. Please try again shortly.',
       });
     }
 
-    logFormEvent('info', ENDPOINT, 'submission_sent', { clientIp: security.clientIp });
     return res.status(200).json({ ok: true });
   } catch (error) {
-    logFormEvent('error', ENDPOINT, 'submission_failed', {
-      clientIp: security.clientIp,
-      error: error instanceof Error ? error.message : 'unknown_error',
-    });
+    console.error('[api/application] submission failed:', error);
     return res.status(500).json({
       ok: false,
       error: 'Unable to send your application right now. Please try again shortly.',
