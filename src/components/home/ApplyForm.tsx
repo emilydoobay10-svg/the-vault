@@ -1,37 +1,76 @@
 import { useState, type FormEvent } from 'react';
 import { VENUE_TYPES } from '../../data/content';
-import { submitForm, type SubmitStatus } from '../../lib/submitForm';
 import { FormFeedback } from '../ui/FormFeedback';
 
 type ApplyFormProps = {
   showHeader?: boolean;
 };
 
+type FormStatus = 'idle' | 'loading' | 'success' | 'error';
+
 export function ApplyForm({ showHeader = true }: ApplyFormProps) {
-  const [status, setStatus] = useState<SubmitStatus>('idle');
+  const [status, setStatus] = useState<FormStatus>('idle');
   const [errorMessage, setErrorMessage] = useState('');
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const form = event.currentTarget;
+
     setStatus('loading');
     setErrorMessage('');
 
-    const formData = new FormData(event.currentTarget);
-    const result = await submitForm('/api/application', {
+    const formData = new FormData(form);
+    const payload = {
       venueName: String(formData.get('venueName') ?? ''),
       contactName: String(formData.get('contactName') ?? ''),
       email: String(formData.get('email') ?? ''),
       venueType: String(formData.get('venueType') ?? ''),
-    });
+    };
 
-    if (result.ok) {
-      setStatus('success');
-      event.currentTarget.reset();
-      return;
+    try {
+      const response = await fetch('/api/application', {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const contentType = response.headers.get('content-type') ?? '';
+      if (!contentType.includes('application/json')) {
+        setErrorMessage(
+          'Submission failed. The server did not respond correctly. Please try again.',
+        );
+        setStatus('error');
+        return;
+      }
+
+      let body: unknown;
+      try {
+        body = await response.json();
+      } catch {
+        setErrorMessage(
+          'Submission failed. The server returned an invalid response. Please try again.',
+        );
+        setStatus('error');
+        return;
+      }
+
+      const data = body as { ok?: boolean; error?: string };
+
+      if (response.ok && data.ok === true) {
+        setStatus('success');
+        form.reset();
+        return;
+      }
+
+      setErrorMessage(data.error ?? 'Submission failed. Please try again.');
+      setStatus('error');
+    } catch {
+      setErrorMessage('Network error. Check your connection and try again.');
+      setStatus('error');
     }
-
-    setErrorMessage(result.error);
-    setStatus('error');
   };
 
   const isDisabled = status === 'loading' || status === 'success';
